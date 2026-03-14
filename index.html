@@ -1,0 +1,637 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QuickPDF - Free Online PDF Tools</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 40px;
+        }
+
+        .header h1 {
+            font-size: 3rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+
+        .tools-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+            margin-bottom: 40px;
+        }
+
+        .tool-card {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .tool-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+        }
+
+        .tool-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 30px 60px rgba(0,0,0,0.15);
+        }
+
+        .tool-icon {
+            font-size: 3rem;
+            color: #667eea;
+            margin-bottom: 20px;
+            display: block;
+        }
+
+        .tool-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: #333;
+        }
+
+        .tool-desc {
+            color: #666;
+            margin-bottom: 25px;
+        }
+
+        .tool-btn {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .tool-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
+        }
+
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.8);
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-content {
+            background: white;
+            margin: 5% auto;
+            padding: 0;
+            border-radius: 20px;
+            width: 90%;
+            max-width: 800px;
+            max-height: 90vh;
+            overflow: hidden;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from { transform: translateY(-50px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .modal-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 25px;
+            text-align: center;
+        }
+
+        .modal-header h2 {
+            margin-bottom: 10px;
+        }
+
+        .modal-body {
+            padding: 30px;
+            max-height: 60vh;
+            overflow-y: auto;
+        }
+
+        .file-input-wrapper {
+            position: relative;
+            overflow: hidden;
+            display: inline-block;
+            width: 100%;
+            margin-bottom: 20px;
+        }
+
+        .file-input-wrapper input[type=file] {
+            position: absolute;
+            left: -9999px;
+        }
+
+        .file-input-label {
+            display: block;
+            padding: 20px;
+            background: #f8f9ff;
+            border: 2px dashed #667eea;
+            border-radius: 10px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .file-input-label:hover {
+            background: #667eea;
+            color: white;
+        }
+
+        .file-input-label i {
+            font-size: 2rem;
+            margin-bottom: 10px;
+        }
+
+        .file-list {
+            margin-top: 20px;
+        }
+
+        .file-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            background: #f8f9ff;
+            border-radius: 10px;
+            margin-bottom: 10px;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-danger {
+            background: #ff6b6b;
+            color: white;
+        }
+
+        .btn-success {
+            background: #51cf66;
+            color: white;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #e0e0e0;
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 20px 0;
+            display: none;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        .download-link {
+            display: inline-block;
+            margin-top: 20px;
+            padding: 15px 30px;
+            background: #51cf66;
+            color: white;
+            text-decoration: none;
+            border-radius: 10px;
+            font-weight: 600;
+        }
+
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            position: absolute;
+            right: 20px;
+            top: 20px;
+        }
+
+        .close:hover {
+            color: white;
+        }
+
+        @media (max-width: 768px) {
+            .tools-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1><i class="fas fa-file-pdf"></i> QuickPDF</h1>
+            <p>Fast & Free Online PDF Tools</p>
+        </div>
+
+        <div class="tools-grid">
+            <div class="tool-card" onclick="openTool('merge')">
+                <i class="fas fa-compress-arrows-alt tool-icon"></i>
+                <div class="tool-title">Merge PDF</div>
+                <div class="tool-desc">Combine multiple PDFs into one</div>
+                <button class="tool-btn">Merge PDFs</button>
+            </div>
+
+            <div class="tool-card" onclick="openTool('split')">
+                <i class="fas fa-cut tool-icon"></i>
+                <div class="tool-title">Split PDF</div>
+                <div class="tool-desc">Split PDF into individual pages</div>
+                <button class="tool-btn">Split PDF</button>
+            </div>
+
+            <div class="tool-card" onclick="openTool('compress')">
+                <i class="fas fa-file-archive tool-icon"></i>
+                <div class="tool-title">Compress PDF</div>
+                <div class="tool-desc">Reduce PDF file size</div>
+                <button class="tool-btn">Compress PDF</button>
+            </div>
+
+            <div class="tool-card" onclick="openTool('pdf-to-word')">
+                <i class="fas fa-file-word tool-icon"></i>
+                <div class="tool-title">PDF to Word</div>
+                <div class="tool-desc">Convert PDF to editable Word</div>
+                <button class="tool-btn">PDF → Word</button>
+            </div>
+
+            <div class="tool-card" onclick="openTool('jpg-to-pdf')">
+                <i class="fas fa-images tool-icon"></i>
+                <div class="tool-title">JPG to PDF</div>
+                <div class="tool-desc">Convert images to PDF</div>
+                <button class="tool-btn">JPG → PDF</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Merge PDF Modal -->
+    <div id="mergeModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <span class="close" onclick="closeModal('merge')">&times;</span>
+                <h2><i class="fas fa-compress-arrows-alt"></i> Merge PDF</h2>
+            </div>
+            <div class="modal-body">
+                <div class="file-input-wrapper">
+                    <input type="file" id="mergeFiles" multiple accept=".pdf">
+                    <label for="mergeFiles" class="file-input-label">
+                        <i class="fas fa-cloud-upload-alt"></i>
+                        <div>Click to select PDF files or drag & drop</div>
+                        <small>Multiple files supported</small>
+                    </label>
+                </div>
+                <div class="file-list" id="mergeFileList"></div>
+                <div class="progress-bar" id="mergeProgress">
+                    <div class="progress-fill"></div>
+                </div>
+                <button class="btn btn-primary" id="mergeBtn" onclick="mergePDFs()" disabled>Merge PDFs</button>
+                <a id="mergeDownload" class="download-link" style="display:none;" download>Download Merged PDF</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Other modals follow similar pattern -->
+    <div id="splitModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <span class="close" onclick="closeModal('split')">&times;</span>
+                <h2><i class="fas fa-cut"></i> Split PDF</h2>
+            </div>
+            <div class="modal-body">
+                <div class="file-input-wrapper">
+                    <input type="file" id="splitFile" accept=".pdf">
+                    <label for="splitFile" class="file-input-label">
+                        <i class="fas fa-cloud-upload-alt"></i>
+                        <div>Select PDF to split</div>
+                    </label>
+                </div>
+                <div class="progress-bar" id="splitProgress">
+                    <div class="progress-fill"></div>
+                </div>
+                <button class="btn btn-primary" id="splitBtn" onclick="splitPDF()" disabled>Generate Individual Pages</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        <script>
+let currentTool = '';
+let selectedFiles = {};
+
+// =============================
+// MODAL CONTROL
+// =============================
+function openTool(tool) {
+    currentTool = tool;
+    document.getElementById(tool + 'Modal').style.display = 'block';
+    document.body.style.overflow = 'hidden';
+}
+
+function closeModal(tool) {
+    document.getElementById(tool + 'Modal').style.display = 'none';
+    document.body.style.overflow = 'auto';
+}
+
+window.onclick = function(event) {
+    if (event.target.classList.contains('modal')) {
+        event.target.style.display = "none";
+    }
+};
+
+// =============================
+// FILE HANDLING
+// =============================
+document.querySelectorAll('input[type="file"]').forEach(input => {
+    input.addEventListener('change', e => {
+        handleFiles(e.target.id, e.target.files);
+    });
+});
+
+function handleFiles(inputId, files) {
+    const tool = inputId.replace('Files','').replace('File','');
+    selectedFiles[tool] = Array.from(files);
+
+    const btn = document.getElementById(tool + 'Btn');
+    if(btn) btn.disabled = files.length === 0;
+
+    const fileList = document.getElementById(tool + 'FileList');
+    if(!fileList) return;
+
+    fileList.innerHTML = '';
+    selectedFiles[tool].forEach((file,i)=>{
+        const div=document.createElement('div');
+        div.className="file-item";
+        div.innerHTML=`
+            <span>${file.name}</span>
+            <button class="btn btn-danger"
+            onclick="removeFile('${tool}',${i})">Remove</button>`;
+        fileList.appendChild(div);
+    });
+}
+
+function removeFile(tool,index){
+    selectedFiles[tool].splice(index,1);
+    handleFiles(tool+'Files',selectedFiles[tool]);
+}
+
+// =============================
+// PROGRESS BAR
+// =============================
+function showProgress(tool){
+    document.getElementById(tool+'Progress').style.display='block';
+}
+function updateProgress(tool,p){
+    document.querySelector(`#${tool}Progress .progress-fill`).style.width=p+'%';
+}
+function hideProgress(tool){
+    document.getElementById(tool+'Progress').style.display='none';
+}
+
+// =============================
+// MERGE PDF
+// =============================
+async function mergePDFs(){
+
+    const files = selectedFiles.merge;
+    if(!files || files.length===0) return;
+
+    showProgress('merge');
+
+    try{
+        const mergedPdf = await PDFLib.PDFDocument.create();
+
+        let progress=0;
+
+        for(const file of files){
+            const bytes = await file.arrayBuffer();
+            const pdf = await PDFLib.PDFDocument.load(bytes);
+
+            const pages = await mergedPdf.copyPages(pdf,pdf.getPageIndices());
+            pages.forEach(p=>mergedPdf.addPage(p));
+
+            progress+=100/files.length;
+            updateProgress('merge',progress);
+        }
+
+        const mergedBytes = await mergedPdf.save();
+        const blob=new Blob([mergedBytes],{type:'application/pdf'});
+
+        const url=URL.createObjectURL(blob);
+        const link=document.getElementById('mergeDownload');
+        link.href=url;
+        link.download="merged.pdf";
+        link.style.display="inline-block";
+
+    }catch(e){
+        alert("Merge failed: "+e.message);
+    }
+
+    hideProgress('merge');
+}
+
+// =============================
+// SPLIT PDF
+// =============================
+async function splitPDF(){
+
+    const file = selectedFiles.split?.[0];
+    if(!file) return;
+
+    showProgress('split');
+
+    try{
+        const bytes = await file.arrayBuffer();
+        const pdf = await PDFLib.PDFDocument.load(bytes);
+
+        const total = pdf.getPageCount();
+
+        for(let i=0;i<total;i++){
+
+            const newPdf=await PDFLib.PDFDocument.create();
+            const [page]=await newPdf.copyPages(pdf,[i]);
+            newPdf.addPage(page);
+
+            const pdfBytes=await newPdf.save();
+            const blob=new Blob([pdfBytes],{type:'application/pdf'});
+            const url=URL.createObjectURL(blob);
+
+            const a=document.createElement('a');
+            a.href=url;
+            a.download=`page_${i+1}.pdf`;
+            a.className="download-link";
+            a.textContent=`Download Page ${i+1}`;
+            document.querySelector('#splitModal .modal-body')
+            .appendChild(a);
+
+            updateProgress('split',((i+1)/total)*100);
+        }
+
+    }catch(e){
+        alert("Split failed");
+    }
+
+    hideProgress('split');
+}
+
+// =============================
+// COMPRESS PDF (Basic)
+// =============================
+async function compressPDF(){
+
+    const file = selectedFiles.compress?.[0];
+    if(!file) return;
+
+    showProgress('compress');
+
+    // Browser limitation:
+    // true compression needs server.
+    // Here we rebuild PDF (reduces metadata size)
+
+    const bytes = await file.arrayBuffer();
+    const pdf = await PDFLib.PDFDocument.load(bytes);
+    const newPdf = await PDFLib.PDFDocument.create();
+
+    const pages = await newPdf.copyPages(pdf,pdf.getPageIndices());
+    pages.forEach(p=>newPdf.addPage(p));
+
+    const newBytes = await newPdf.save({useObjectStreams:true});
+
+    const blob=new Blob([newBytes],{type:'application/pdf'});
+    const url=URL.createObjectURL(blob);
+
+    const link=document.createElement("a");
+    link.href=url;
+    link.download="compressed.pdf";
+    link.className="download-link";
+    link.textContent="Download Compressed PDF";
+
+    document.querySelector('#compressModal .modal-body')
+    .appendChild(link);
+
+    hideProgress('compress');
+}
+
+// =============================
+// JPG → PDF
+// =============================
+async function jpgToPDF(){
+
+    const files = selectedFiles['jpg-to-pdf'];
+    if(!files || files.length===0) return;
+
+    const pdf = new jspdf.jsPDF();
+
+    for(let i=0;i<files.length;i++){
+
+        const imgData = await readFileAsDataURL(files[i]);
+
+        if(i>0) pdf.addPage();
+
+        pdf.addImage(imgData,'JPEG',10,10,180,260);
+    }
+
+    pdf.save("images.pdf");
+}
+
+function readFileAsDataURL(file){
+    return new Promise(resolve=>{
+        const reader=new FileReader();
+        reader.onload=e=>resolve(e.target.result);
+        reader.readAsDataURL(file);
+    });
+}
+
+// =============================
+// PDF → WORD (INFO)
+// =============================
+function pdfToWord(){
+    alert(
+`PDF → Word requires server-side conversion.
+
+To enable real conversion later:
+• CloudConvert API
+• LibreOffice backend
+• Node.js server`
+);
+}
+
+</script>
